@@ -1,60 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-
-interface Campaign {
-  campaign_id: string;
-  total: number;
-  completed: number;
-  failed: number;
-  success_pct: number;
-  last_activity: string;
-}
+import { useCampaigns } from '@/hooks/useCampaigns';
 
 const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { campaigns, loading, error } = useCampaigns();
 
-  // Mock data for now - in real implementation, this would come from Supabase
-  useEffect(() => {
-    const mockCampaigns: Campaign[] = [
-      {
-        campaign_id: 'ALX-20241130-A1B2C3',
-        total: 45,
-        completed: 32,
-        failed: 3,
-        success_pct: 88.9,
-        last_activity: '2024-11-30T14:30:00Z'
-      },
-      {
-        campaign_id: 'ALX-20241130-D4E5F6',
-        total: 28,
-        completed: 28,
-        failed: 0,
-        success_pct: 100.0,
-        last_activity: '2024-11-30T12:15:00Z'
-      },
-      {
-        campaign_id: 'ALX-20241129-G7H8I9',
-        total: 50,
-        completed: 41,
-        failed: 7,
-        success_pct: 82.0,
-        last_activity: '2024-11-29T16:45:00Z'
-      }
-    ];
-
-    setTimeout(() => {
-      setCampaigns(mockCampaigns);
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  const getStatusBadge = (campaign: Campaign) => {
+  const getStatusBadge = (campaign: any) => {
     const inProgress = campaign.total - campaign.completed - campaign.failed;
     
     if (inProgress > 0) {
@@ -69,6 +25,25 @@ const Campaigns = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Campaigns</h1>
+          <p className="mt-2 text-gray-600">
+            Monitor your outbound calling campaigns and track performance.
+          </p>
+        </div>
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-8 text-center">
+            <div className="text-red-500 text-lg mb-2">⚠️ Error Loading Campaigns</div>
+            <p className="text-gray-600">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

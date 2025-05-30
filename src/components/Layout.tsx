@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import ChatWidget from './ChatWidget';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,30 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
+  const [chatMode, setChatMode] = useState('inline');
+
+  useEffect(() => {
+    const savedChatMode = localStorage.getItem('chatMode') || 'inline';
+    setChatMode(savedChatMode);
+  }, []);
+
+  // Listen for storage changes to update chat mode in real-time
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedChatMode = localStorage.getItem('chatMode') || 'inline';
+      setChatMode(savedChatMode);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events for same-tab updates
+    window.addEventListener('chatModeChanged', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chatModeChanged', handleStorageChange);
+    };
+  }, []);
 
   const navigation = [
     { name: 'Upload', href: '/upload', icon: '📤' },
@@ -57,6 +82,9 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+
+      {/* Conditional Chat Widget */}
+      {chatMode === 'widget' && <ChatWidget />}
     </div>
   );
 };

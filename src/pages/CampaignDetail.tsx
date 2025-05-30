@@ -1,91 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
-interface Contact {
-  row_id: string;
-  name: string;
-  business_name: string;
-  phone: string;
-  status: 'NEW' | 'CALLING' | 'DONE' | 'FAILED';
-  transcript: any;
-  last_called_at: string;
-  processing_order: number;
-}
+import { useContacts } from '@/hooks/useContacts';
 
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTranscript, setSelectedTranscript] = useState<any>(null);
+  const { contacts, loading, error } = useContacts(id);
 
-  // Mock data for now - in real implementation, this would come from Supabase
-  useEffect(() => {
-    const mockContacts: Contact[] = [
-      {
-        row_id: `${id}-1`,
-        name: 'John Doe',
-        business_name: 'Acme Corp',
-        phone: '+1234567890',
-        status: 'DONE',
-        transcript: { summary: 'Interested in our services, scheduled follow-up', duration: 180 },
-        last_called_at: '2024-11-30T14:30:00Z',
-        processing_order: 1
-      },
-      {
-        row_id: `${id}-2`,
-        name: 'Jane Smith',
-        business_name: 'Tech Solutions LLC',
-        phone: '+1987654321',
-        status: 'CALLING',
-        transcript: null,
-        last_called_at: '2024-11-30T14:35:00Z',
-        processing_order: 2
-      },
-      {
-        row_id: `${id}-3`,
-        name: 'Bob Johnson',
-        business_name: 'Marketing Plus',
-        phone: '+1555123456',
-        status: 'DONE',
-        transcript: { summary: 'Not interested at this time', duration: 45 },
-        last_called_at: '2024-11-30T14:20:00Z',
-        processing_order: 3
-      },
-      {
-        row_id: `${id}-4`,
-        name: 'Alice Brown',
-        business_name: 'Consulting Group',
-        phone: '+1444987654',
-        status: 'FAILED',
-        transcript: { summary: 'Call failed - number disconnected', duration: 0 },
-        last_called_at: '2024-11-30T14:25:00Z',
-        processing_order: 4
-      },
-      {
-        row_id: `${id}-5`,
-        name: 'Charlie Wilson',
-        business_name: 'Design Studio',
-        phone: '+1333456789',
-        status: 'NEW',
-        transcript: null,
-        last_called_at: null,
-        processing_order: 5
-      }
-    ];
-
-    setTimeout(() => {
-      setContacts(mockContacts);
-      setLoading(false);
-    }, 500);
-  }, [id]);
-
-  const getStatusBadge = (status: Contact['status']) => {
+  const getStatusBadge = (status: string) => {
     const styles = {
       NEW: 'bg-status-new text-white',
       CALLING: 'bg-status-calling text-white animate-pulse-slow',
@@ -94,7 +21,7 @@ const CampaignDetail = () => {
     };
 
     return (
-      <Badge className={styles[status]}>
+      <Badge className={styles[status as keyof typeof styles] || 'bg-gray-500 text-white'}>
         {status}
       </Badge>
     );
@@ -110,8 +37,22 @@ const CampaignDetail = () => {
     return { total, completed, failed, inProgress, successRate };
   };
 
-  const stats = getStats();
-  const progressPercentage = stats.total > 0 ? ((stats.completed + stats.failed) / stats.total) * 100 : 0;
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{id}</h1>
+          <p className="mt-2 text-gray-600">Campaign details and contact progress</p>
+        </div>
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-8 text-center">
+            <div className="text-red-500 text-lg mb-2">⚠️ Error Loading Campaign</div>
+            <p className="text-gray-600">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -122,6 +63,9 @@ const CampaignDetail = () => {
       </div>
     );
   }
+
+  const stats = getStats();
+  const progressPercentage = stats.total > 0 ? ((stats.completed + stats.failed) / stats.total) * 100 : 0;
 
   return (
     <div className="space-y-8">
@@ -189,75 +133,81 @@ const CampaignDetail = () => {
           <CardTitle>Contact List</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">#</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Name</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Company</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Phone</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Last Called</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map((contact) => (
-                  <tr key={contact.row_id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {contact.processing_order}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-gray-900">{contact.name}</div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {contact.business_name || '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 font-mono">
-                      {contact.phone}
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(contact.status)}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {contact.last_called_at ? new Date(contact.last_called_at).toLocaleString() : '-'}
-                    </td>
-                    <td className="py-3 px-4">
-                      {contact.transcript && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              View Transcript
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Call Transcript - {contact.name}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <span className="font-medium">Duration:</span> {contact.transcript.duration}s
-                                </div>
-                                <div>
-                                  <span className="font-medium">Status:</span> {contact.status}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-sm">Summary:</span>
-                                <p className="mt-2 text-gray-700">{contact.transcript.summary}</p>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </td>
+          {contacts.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-gray-500">No contacts found for this campaign.</div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">#</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Company</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Phone</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Last Called</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {contacts.map((contact) => (
+                    <tr key={contact.row_id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {contact.processing_order || '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-gray-900">{contact.name}</div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {contact.business_name || '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600 font-mono">
+                        {contact.phone}
+                      </td>
+                      <td className="py-3 px-4">
+                        {getStatusBadge(contact.status)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {contact.last_called_at ? new Date(contact.last_called_at).toLocaleString() : '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        {contact.transcript && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                View Transcript
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Call Transcript - {contact.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-medium">Duration:</span> {contact.transcript.duration || 0}s
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Status:</span> {contact.status}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-sm">Summary:</span>
+                                  <p className="mt-2 text-gray-700">{contact.transcript.summary || 'No summary available'}</p>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

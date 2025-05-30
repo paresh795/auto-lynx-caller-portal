@@ -1,29 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-interface DashboardStats {
-  totalCampaigns: number;
-  totalCalls: number;
-  successRate: number;
-  averageDuration: number;
-  todaysCalls: number;
-  activeCampaigns: number;
-}
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCampaigns: 0,
-    totalCalls: 0,
-    successRate: 0,
-    averageDuration: 0,
-    todaysCalls: 0,
-    activeCampaigns: 0
-  });
-  const [loading, setLoading] = useState(true);
+  const { stats, loading, error } = useDashboardStats();
 
-  // Mock trend data
+  // Mock trend data for chart - in a real app, this would come from historical data
   const trendData = [
     { date: '11/25', calls: 45, success: 38 },
     { date: '11/26', calls: 52, success: 44 },
@@ -33,28 +18,30 @@ const Dashboard = () => {
     { date: '11/30', calls: 89, success: 79 }
   ];
 
-  // Mock data for now - in real implementation, this would come from Supabase
-  useEffect(() => {
-    const mockStats: DashboardStats = {
-      totalCampaigns: 12,
-      totalCalls: 458,
-      successRate: 87.3,
-      averageDuration: 142,
-      todaysCalls: 89,
-      activeCampaigns: 3
-    };
-
-    setTimeout(() => {
-      setStats(mockStats);
-      setLoading(false);
-    }, 500);
-  }, []);
-
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
   };
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-2 text-gray-600">
+            Overview of your calling campaign performance and key metrics.
+          </p>
+        </div>
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-8 text-center">
+            <div className="text-red-500 text-lg mb-2">⚠️ Error Loading Dashboard</div>
+            <p className="text-gray-600">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -123,7 +110,9 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-gray-900">{stats.todaysCalls}</div>
-            <div className="text-sm text-green-600 mt-1">+12% from yesterday</div>
+            <div className="text-sm text-green-600 mt-1">
+              {stats.todaysCalls > 0 ? '+12% from yesterday' : 'No calls today yet'}
+            </div>
           </CardContent>
         </Card>
 
@@ -201,23 +190,23 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <Link to="/upload" className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
               <div className="text-2xl mb-2">📤</div>
               <div className="font-medium text-gray-900">Start New Campaign</div>
               <div className="text-sm text-gray-600">Upload contacts and begin calling</div>
-            </button>
+            </Link>
             
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <Link to="/campaigns" className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
               <div className="text-2xl mb-2">📊</div>
               <div className="font-medium text-gray-900">View All Campaigns</div>
               <div className="text-sm text-gray-600">Monitor active and completed campaigns</div>
-            </button>
+            </Link>
             
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <Link to="/settings" className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
               <div className="text-2xl mb-2">⚙️</div>
               <div className="font-medium text-gray-900">Settings</div>
               <div className="text-sm text-gray-600">Configure chat and preferences</div>
-            </button>
+            </Link>
           </div>
         </CardContent>
       </Card>

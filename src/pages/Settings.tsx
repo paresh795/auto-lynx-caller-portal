@@ -25,23 +25,22 @@ const Settings = () => {
     localStorage.setItem('chatMode', chatMode);
     setHasUnsavedChanges(false);
     
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('chatModeChanged'));
+    
     toast({
       title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
+      description: "Your chat preferences have been updated successfully.",
     });
-
-    // Reload the page to apply chat widget changes
-    if (chatMode === 'widget') {
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    }
   };
 
   const resetSettings = () => {
     setChatMode('inline');
     localStorage.removeItem('chatMode');
     setHasUnsavedChanges(false);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('chatModeChanged'));
     
     toast({
       title: "Settings Reset",
@@ -97,7 +96,7 @@ const Settings = () => {
                   <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
                     ✅ Available everywhere<br/>
                     ✅ Non-intrusive design<br/>
-                    ⚠️ Requires page reload to activate
+                    ✅ Updates immediately
                   </div>
                 </Label>
               </div>
