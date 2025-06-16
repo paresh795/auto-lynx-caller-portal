@@ -9,6 +9,11 @@ interface DashboardStats {
   averageDuration: number;
   todaysCalls: number;
   activeCampaigns: number;
+  trendData: Array<{
+    date: string;
+    calls: number;
+    success: number;
+  }>;
 }
 
 export const useDashboardStats = () => {
@@ -18,7 +23,8 @@ export const useDashboardStats = () => {
     successRate: 0,
     averageDuration: 0,
     todaysCalls: 0,
-    activeCampaigns: 0
+    activeCampaigns: 0,
+    trendData: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +43,8 @@ export const useDashboardStats = () => {
       // Fetch all contacts for additional calculations
       const { data: allContacts, error: contactsError } = await supabase
         .from('contacts')
-        .select('*');
+        .select('*')
+        .order('last_called_at', { ascending: false });
 
       if (contactsError) throw contactsError;
 
@@ -47,7 +54,6 @@ export const useDashboardStats = () => {
       
       const completedCalls = allContacts?.filter(c => c.status === 'DONE').length || 0;
       const failedCalls = allContacts?.filter(c => c.status === 'FAILED').length || 0;
-      const callingCalls = allContacts?.filter(c => c.status === 'CALLING').length || 0;
       
       const successRate = totalCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
       
@@ -65,13 +71,17 @@ export const useDashboardStats = () => {
       // Average duration (mock for now - would need transcript analysis)
       const averageDuration = 142;
 
+      // Generate trend data from actual call data
+      const trendData = generateTrendData(allContacts || []);
+
       setStats({
         totalCampaigns,
         totalCalls,
         successRate,
         averageDuration,
         todaysCalls,
-        activeCampaigns
+        activeCampaigns,
+        trendData
       });
 
     } catch (err) {
@@ -80,6 +90,32 @@ export const useDashboardStats = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateTrendData = (contacts: any[]) => {
+    // Get the last 7 days
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      days.push(date);
+    }
+
+    return days.map(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayContacts = contacts.filter(c => 
+        c.last_called_at && c.last_called_at.startsWith(dateStr)
+      );
+      
+      const totalCalls = dayContacts.length;
+      const successfulCalls = dayContacts.filter(c => c.status === 'DONE').length;
+      
+      return {
+        date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }),
+        calls: totalCalls,
+        success: successfulCalls
+      };
+    });
   };
 
   useEffect(() => {

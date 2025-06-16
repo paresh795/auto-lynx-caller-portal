@@ -32,6 +32,7 @@ export type Database = {
           name: string | null
           phone: string | null
           processing_order: number | null
+          recording_url: string | null
           row_id: string
           status: Database["public"]["Enums"]["call_status"] | null
           transcript: Json | null
@@ -43,6 +44,7 @@ export type Database = {
           name?: string | null
           phone?: string | null
           processing_order?: number | null
+          recording_url?: string | null
           row_id: string
           status?: Database["public"]["Enums"]["call_status"] | null
           transcript?: Json | null
@@ -54,6 +56,7 @@ export type Database = {
           name?: string | null
           phone?: string | null
           processing_order?: number | null
+          recording_url?: string | null
           row_id?: string
           status?: Database["public"]["Enums"]["call_status"] | null
           transcript?: Json | null

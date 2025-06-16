@@ -43,7 +43,7 @@ const ChatWidget = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/6e26988b-5633-4b04-995a-35902aa8ca1e/chat', {
+      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/2e9f09bc-7d53-4387-9d61-0fcb16a4d131', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,60 +96,70 @@ const ChatWidget = () => {
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
-          className="rounded-full w-14 h-14 bg-brand-primary hover:bg-brand-secondary shadow-lg"
+          className="rounded-full w-16 h-16 bg-brand-primary hover:bg-brand-secondary shadow-lg"
           aria-label="Open chat"
         >
-          <MessageCircle size={24} />
+          <MessageCircle size={28} />
         </Button>
       ) : (
-        <Card className="w-80 h-96 shadow-xl">
-          <CardHeader className="pb-2">
+        <Card className="w-96 h-[600px] shadow-xl">
+          <CardHeader className="pb-3 bg-brand-primary text-white rounded-t-lg">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-sm">AutoLynx Assistant</CardTitle>
+              <CardTitle className="text-lg font-semibold">AutoLynx Assistant</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close chat"
+                className="text-white hover:bg-white/20"
               >
-                <X size={16} />
+                <X size={20} />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-3 flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto mb-3 space-y-2">
+          <CardContent className="p-4 flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3 max-h-[450px]">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`p-2 rounded-lg text-sm ${
+                  className={`p-3 rounded-lg text-sm ${
                     message.isBot
-                      ? 'bg-gray-100 text-gray-800'
-                      : 'bg-brand-primary text-white ml-8'
+                      ? 'bg-gray-100 text-gray-800 mr-4'
+                      : 'bg-brand-primary text-white ml-4'
                   }`}
                 >
                   {message.text}
                 </div>
               ))}
+              {isLoading && (
+                <div className="bg-gray-100 text-gray-800 mr-4 p-3 rounded-lg text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-3 items-end">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message or paste contacts..."
-                className="resize-none text-sm"
-                rows={2}
+                className="resize-none text-sm min-h-[60px] flex-1"
+                rows={3}
                 disabled={isLoading}
               />
               <Button
                 onClick={handleSend}
                 disabled={isLoading || !input.trim()}
-                size="sm"
-                className="bg-brand-primary hover:bg-brand-secondary"
+                size="lg"
+                className="bg-brand-primary hover:bg-brand-secondary h-[60px] px-4"
               >
-                <Send size={16} />
+                <Send size={20} />
               </Button>
             </div>
           </CardContent>

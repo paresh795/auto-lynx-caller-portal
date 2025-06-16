@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ExternalLink, FileText } from 'lucide-react';
 import { useContacts } from '@/hooks/useContacts';
 
 const CampaignDetail = () => {
@@ -25,6 +26,42 @@ const CampaignDetail = () => {
         {status}
       </Badge>
     );
+  };
+
+  const formatTranscript = (transcript: any) => {
+    if (!transcript) return 'No transcript available';
+    
+    // Handle different transcript formats
+    if (typeof transcript === 'string') {
+      return transcript;
+    }
+    
+    if (typeof transcript === 'object') {
+      // If it has a summary field, show that
+      if (transcript.summary) {
+        return transcript.summary;
+      }
+      
+      // If it has transcript text directly
+      if (transcript.transcript) {
+        return transcript.transcript;
+      }
+      
+      // If it's a complex object, try to extract meaningful text
+      if (transcript.conversation || transcript.text || transcript.content) {
+        return transcript.conversation || transcript.text || transcript.content;
+      }
+      
+      // Fallback: stringify the object
+      return JSON.stringify(transcript, null, 2);
+    }
+    
+    return 'No transcript available';
+  };
+
+  const getTranscriptDuration = (transcript: any) => {
+    if (!transcript || typeof transcript !== 'object') return null;
+    return transcript.duration || transcript.call_duration || null;
   };
 
   const getStats = () => {
@@ -148,7 +185,7 @@ const CampaignDetail = () => {
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Phone</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Last Called</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Action</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -173,34 +210,64 @@ const CampaignDetail = () => {
                         {contact.last_called_at ? new Date(contact.last_called_at).toLocaleString() : '-'}
                       </td>
                       <td className="py-3 px-4">
-                        {contact.transcript && (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                View Transcript
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Call Transcript - {contact.name}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="font-medium">Duration:</span> {contact.transcript.duration || 0}s
+                        <div className="flex gap-2">
+                          {contact.transcript && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <FileText className="w-4 h-4 mr-1" />
+                                  Transcript
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Call Transcript - {contact.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="font-medium">Contact:</span> {contact.name}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Phone:</span> {contact.phone}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Status:</span> {contact.status}
+                                    </div>
+                                    {getTranscriptDuration(contact.transcript) && (
+                                      <div>
+                                        <span className="font-medium">Duration:</span> {getTranscriptDuration(contact.transcript)}s
+                                      </div>
+                                    )}
                                   </div>
                                   <div>
-                                    <span className="font-medium">Status:</span> {contact.status}
+                                    <span className="font-medium text-sm">Transcript:</span>
+                                    <div className="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700 whitespace-pre-wrap text-sm">
+                                      {formatTranscript(contact.transcript)}
+                                    </div>
                                   </div>
                                 </div>
-                                <div>
-                                  <span className="font-medium text-sm">Summary:</span>
-                                  <p className="mt-2 text-gray-700">{contact.transcript.summary || 'No summary available'}</p>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        )}
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          {contact.recording_url && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              asChild
+                            >
+                              <a 
+                                href={contact.recording_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-1" />
+                                Recording
+                              </a>
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -8,16 +8,6 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 const Dashboard = () => {
   const { stats, loading, error } = useDashboardStats();
 
-  // Mock trend data for chart - in a real app, this would come from historical data
-  const trendData = [
-    { date: '11/25', calls: 45, success: 38 },
-    { date: '11/26', calls: 52, success: 44 },
-    { date: '11/27', calls: 38, success: 31 },
-    { date: '11/28', calls: 61, success: 55 },
-    { date: '11/29', calls: 73, success: 62 },
-    { date: '11/30', calls: 89, success: 79 }
-  ];
-
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -111,7 +101,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-3xl font-bold text-gray-900">{stats.todaysCalls}</div>
             <div className="text-sm text-green-600 mt-1">
-              {stats.todaysCalls > 0 ? '+12% from yesterday' : 'No calls today yet'}
+              {stats.todaysCalls > 0 ? 'Active today' : 'No calls today yet'}
             </div>
           </CardContent>
         </Card>
@@ -146,7 +136,7 @@ const Dashboard = () => {
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <LineChart data={stats.trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="date" 
