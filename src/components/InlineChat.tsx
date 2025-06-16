@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useWebhookConfig } from '@/hooks/useWebhookConfig';
 
 interface InlineChatProps {
   onSubmit: (data: any[]) => void;
@@ -14,6 +15,7 @@ const InlineChat = ({ onSubmit, isLoading }: InlineChatProps) => {
   const [messages, setMessages] = useState<Array<{id: string, text: string, isBot: boolean}>>([]);
   const [hasGreeted, setHasGreeted] = useState(false);
   const { toast } = useToast();
+  const { config } = useWebhookConfig();
 
   // Show greeting when component first mounts
   useEffect(() => {
@@ -87,19 +89,24 @@ const InlineChat = ({ onSubmit, isLoading }: InlineChatProps) => {
     setMessages(prev => [...prev, userMessage]);
     
     try {
+      console.log('Sending inline chat to:', config.chatWebhookUrl);
+      console.log('Request payload:', { chatInput: chatInput.trim(), sessionId: crypto.randomUUID() });
+      
       // Send to chat webhook
-      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/6e26988b-5633-4b04-995a-35902aa8ca1e/chat', {
+      const response = await fetch(config.chatWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId: crypto.randomUUID(),
-          contactsRaw: chatInput.trim()
+          chatInput: chatInput.trim(),
+          sessionId: crypto.randomUUID()
         }),
       });
 
+      console.log('Inline chat response status:', response.status);
       const result = await response.json();
+      console.log('Inline chat response data:', result);
       
       if (response.ok && result.message) {
         const botMessage = { id: (Date.now() + 1).toString(), text: result.message, isBot: true };

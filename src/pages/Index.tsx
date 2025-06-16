@@ -3,8 +3,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
+  const { stats, loading } = useDashboardStats();
+
   return (
     <div className="space-y-12">
       {/* Hero Section */}
@@ -120,27 +123,43 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Stats Preview */}
+      {/* Real Stats Preview */}
       <Card className="rounded-xl shadow-sm bg-gradient-to-r from-brand-primary to-brand-secondary text-white">
         <CardContent className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-            <div>
-              <div className="text-3xl font-bold">458</div>
-              <div className="text-sm opacity-90">Total Calls Made</div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-8 bg-white/20 rounded mb-2"></div>
+                  <div className="h-4 bg-white/20 rounded"></div>
+                </div>
+              ))}
             </div>
-            <div>
-              <div className="text-3xl font-bold">87.3%</div>
-              <div className="text-sm opacity-90">Success Rate</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="text-3xl font-bold">{stats.totalCalls}</div>
+                <div className="text-sm opacity-90">Total Calls Made</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold">{stats.successRate}%</div>
+                <div className="text-sm opacity-90">Success Rate</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold">{stats.totalCampaigns}</div>
+                <div className="text-sm opacity-90">Campaigns Created</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold">
+                  {stats.averageDuration > 0 
+                    ? `${Math.floor(stats.averageDuration / 60)}m ${stats.averageDuration % 60}s`
+                    : 'N/A'
+                  }
+                </div>
+                <div className="text-sm opacity-90">Avg Call Duration</div>
+              </div>
             </div>
-            <div>
-              <div className="text-3xl font-bold">12</div>
-              <div className="text-sm opacity-90">Campaigns Completed</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">2m 22s</div>
-              <div className="text-sm opacity-90">Avg Call Duration</div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

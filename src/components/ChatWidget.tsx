@@ -56,6 +56,7 @@ const ChatWidget = () => {
 
     try {
       console.log('Sending chat message to:', config.chatWebhookUrl);
+      console.log('Request payload:', { chatInput: input.trim(), sessionId: crypto.randomUUID() });
       
       const response = await fetch(config.chatWebhookUrl, {
         method: 'POST',
@@ -63,8 +64,8 @@ const ChatWidget = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId: crypto.randomUUID(),
-          contactsRaw: input.trim()
+          chatInput: input.trim(),
+          sessionId: crypto.randomUUID()
         }),
       });
 
