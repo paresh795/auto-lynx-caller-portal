@@ -5,64 +5,37 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface CsvDropZoneProps {
-  onUpload: (data: any[]) => void;
+  onUpload: (message: string) => void;
   isLoading: boolean;
 }
 
 const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
   const [dragActive, setDragActive] = useState(false);
 
-  const validateContact = (contact: any) => {
-    const errors = [];
-    
-    if (!contact.name || contact.name.length < 2 || contact.name.length > 64) {
-      errors.push('Name must be 2-64 characters');
-    }
-    
-    const phoneRegex = /^\+[1-9]\d{1,14}$/;
-    if (!contact.phone || !phoneRegex.test(contact.phone)) {
-      errors.push('Phone must be in E.164 format (+1234567890)');
-    }
-    
-    return errors;
-  };
-
-  const parseCsvData = (csvText: string) => {
-    const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    
-    const contacts = [];
-    for (let i = 1; i < lines.length && i <= 50; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
-      const contact: any = {};
-      
-      headers.forEach((header, index) => {
-        contact[header] = values[index] || '';
-      });
-      
-      const errors = validateContact(contact);
-      if (errors.length === 0) {
-        contacts.push(contact);
-      }
-    }
-    
-    return contacts;
-  };
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        try {
-          const contacts = parseCsvData(text);
-          onUpload(contacts);
-        } catch (error) {
-          console.error('CSV parsing error:', error);
-        }
-      };
-      reader.readAsText(file);
+    if (!file) return;
+
+    try {
+      // Send file directly to webhook without preprocessing
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/c6e5eaf2-663d-4f44-a047-c60e3fb1aceb', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        onUpload(result.message || 'CSV uploaded successfully. Campaign has been started.');
+      } else {
+        throw new Error(result.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('CSV upload error:', error);
+      onUpload('Error uploading CSV file. Please try again.');
     }
   }, [onUpload]);
 

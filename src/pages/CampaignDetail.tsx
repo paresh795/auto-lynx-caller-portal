@@ -250,14 +250,14 @@ const CampaignDetail = () => {
                               </DialogContent>
                             </Dialog>
                           )}
-                          {contact.recording_url && (
+                          {(contact as any).recording_url && (
                             <Button 
                               variant="outline" 
                               size="sm"
                               asChild
                             >
                               <a 
-                                href={contact.recording_url} 
+                                href={(contact as any).recording_url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center"

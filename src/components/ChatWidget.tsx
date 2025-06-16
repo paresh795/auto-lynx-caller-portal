@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -92,78 +91,115 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-5 right-5 z-50">
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
-          className="rounded-full w-16 h-16 bg-brand-primary hover:bg-brand-secondary shadow-lg"
+          className="rounded-full w-16 h-16 shadow-lg transition-transform hover:scale-105"
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none'
+          }}
           aria-label="Open chat"
         >
-          <MessageCircle size={28} />
+          <MessageCircle size={28} color="white" />
         </Button>
       ) : (
-        <Card className="w-96 h-[600px] shadow-xl">
-          <CardHeader className="pb-3 bg-brand-primary text-white rounded-t-lg">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-semibold">AutoLynx Assistant</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close chat"
-                className="text-white hover:bg-white/20"
+        <div 
+          className="bg-white rounded-xl shadow-xl flex flex-col"
+          style={{
+            width: '350px',
+            height: '500px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)'
+          }}
+        >
+          {/* Chat Header */}
+          <div 
+            className="text-white p-4 rounded-t-xl flex justify-between items-center"
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              fontWeight: '600'
+            }}
+          >
+            <span>AutoLynx Assistant</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close chat"
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            >
+              <X size={20} />
+            </Button>
+          </div>
+
+          {/* Chat Messages */}
+          <div 
+            className="flex-1 p-5 overflow-y-auto space-y-3"
+            style={{ background: '#f8fafc' }}
+          >
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`p-3 rounded-lg text-sm ${
+                  message.isBot
+                    ? 'bg-white text-gray-800 shadow-sm border border-gray-100 mr-4'
+                    : 'text-white ml-4'
+                }`}
+                style={!message.isBot ? {
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                } : {}}
               >
-                <X size={20} />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto mb-4 space-y-3 max-h-[450px]">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`p-3 rounded-lg text-sm ${
-                    message.isBot
-                      ? 'bg-gray-100 text-gray-800 mr-4'
-                      : 'bg-brand-primary text-white ml-4'
-                  }`}
-                >
-                  {message.text}
+                {message.text}
+              </div>
+            ))}
+            {isLoading && (
+              <div className="bg-white text-gray-800 mr-4 p-3 rounded-lg text-sm shadow-sm border border-gray-100">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
-              ))}
-              {isLoading && (
-                <div className="bg-gray-100 text-gray-800 mr-4 p-3 rounded-lg text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-            
-            <div className="flex gap-3 items-end">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message or paste contacts..."
-                className="resize-none text-sm min-h-[60px] flex-1"
-                rows={3}
-                disabled={isLoading}
-              />
-              <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                size="lg"
-                className="bg-brand-primary hover:bg-brand-secondary h-[60px] px-4"
-              >
-                <Send size={20} />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          {/* Chat Input Container */}
+          <div 
+            className="p-4 bg-white rounded-b-xl"
+            style={{ borderTop: '1px solid #e2e8f0' }}
+          >
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter your contacts here... Examples: John Doe, +1234567890, Acme Corp or ask me questions about formatting!"
+              className="w-full resize-vertical border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 rounded-lg p-3 text-sm transition-all duration-200"
+              style={{ 
+                minHeight: '80px',
+                fontFamily: 'inherit',
+                lineHeight: '1.5'
+              }}
+              rows={3}
+              disabled={isLoading}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              className="w-full mt-3 py-3 text-white font-semibold rounded-lg transition-transform hover:scale-[1.02] disabled:hover:scale-100"
+              style={{
+                background: isLoading || !input.trim() 
+                  ? '#94a3b8' 
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none'
+              }}
+            >
+              <Send size={16} className="mr-2" />
+              {isLoading ? 'Sending...' : 'Send Message'}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

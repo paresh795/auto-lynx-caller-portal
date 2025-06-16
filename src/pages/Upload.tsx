@@ -2,7 +2,6 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import CsvDropZone from '@/components/CsvDropZone';
 import InlineChat from '@/components/InlineChat';
@@ -14,7 +13,15 @@ const Upload = () => {
     return localStorage.getItem('chatMode') || 'inline';
   });
 
-  const handleCsvUpload = async (csvData: any[]) => {
+  const handleCsvUpload = async (message: string) => {
+    // The CSV upload now returns a message directly from the webhook
+    toast({
+      title: "CSV Processed",
+      description: message,
+    });
+  };
+
+  const handleInlineChatSubmit = async (data: any[]) => {
     setIsUploading(true);
     
     try {
@@ -24,7 +31,7 @@ const Upload = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chatInput: JSON.stringify(csvData),
+          chatInput: JSON.stringify(data),
           sessionId: crypto.randomUUID()
         }),
       });
@@ -98,7 +105,7 @@ const Upload = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <InlineChat onSubmit={handleCsvUpload} isLoading={isUploading} />
+              <InlineChat onSubmit={handleInlineChatSubmit} isLoading={isUploading} />
             </CardContent>
           </Card>
         )}
