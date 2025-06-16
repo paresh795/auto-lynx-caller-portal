@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -13,18 +13,38 @@ const Upload = () => {
     return localStorage.getItem('chatMode') || 'inline';
   });
 
-  const handleCsvUpload = async (message: string) => {
-    // The CSV upload now returns a message directly from the webhook
-    toast({
-      title: "CSV Processed",
-      description: message,
-    });
+  const handleCsvUpload = (message: string) => {
+    console.log('CSV upload callback received:', message);
+    
+    // Show appropriate toast based on message content
+    const isError = message.toLowerCase().includes('error') || message.toLowerCase().includes('failed');
+    const isSuccess = message.toLowerCase().includes('success') || message.toLowerCase().includes('started');
+    
+    if (isSuccess) {
+      toast({
+        title: "Campaign Started! 🚀",
+        description: message,
+      });
+    } else if (isError) {
+      toast({
+        title: "Upload Issue",
+        description: message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "CSV Processing",
+        description: message,
+      });
+    }
   };
 
   const handleInlineChatSubmit = async (data: any[]) => {
     setIsUploading(true);
     
     try {
+      console.log('Submitting inline chat data:', data);
+      
       const response = await fetch('https://pranaut.app.n8n.cloud/webhook/999f6676-738f-478a-95ec-246b01d71e24', {
         method: 'POST',
         headers: {
@@ -36,17 +56,21 @@ const Upload = () => {
         }),
       });
 
+      console.log('Inline chat response status:', response.status);
+      
       const result = await response.json();
+      console.log('Inline chat response data:', result);
       
       if (response.ok) {
         toast({
-          title: "Campaign Started",
+          title: "Campaign Started! 🚀",
           description: result.message || "Your campaign has been queued successfully.",
         });
       } else {
         throw new Error(result.message || 'Upload failed');
       }
     } catch (error) {
+      console.error('Inline chat submission error:', error);
       toast({
         title: "Upload Failed",
         description: error instanceof Error ? error.message : "Something went wrong",
