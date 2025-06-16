@@ -1,9 +1,9 @@
-
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { useWebhookConfig } from '@/hooks/useWebhookConfig';
 
 interface CsvDropZoneProps {
   onUpload: (message: string) => void;
@@ -14,12 +14,29 @@ const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
   const [dragActive, setDragActive] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const { config } = useWebhookConfig();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
+    // Check if webhook URL is configured
+    if (!config.csvUploadWebhookUrl) {
+      const errorMessage = 'CSV upload webhook URL not configured. Please configure it in Settings.';
+      setUploadStatus('error');
+      setStatusMessage(errorMessage);
+      onUpload(errorMessage);
+      
+      setTimeout(() => {
+        setUploadStatus('idle');
+        setStatusMessage('');
+      }, 8000);
+      return;
+    }
+
     console.log('Starting CSV upload for file:', file.name);
+    console.log('Using webhook URL:', config.csvUploadWebhookUrl);
+    
     setUploadStatus('uploading');
     setStatusMessage('Uploading your CSV file...');
 
@@ -27,9 +44,9 @@ const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      console.log('Sending request to webhook...');
+      console.log('Sending request to configured webhook...');
       
-      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/c6e5eaf2-663d-4f44-a047-c60e3fb1aceb', {
+      const response = await fetch(config.csvUploadWebhookUrl, {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -72,7 +89,7 @@ const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
       let errorMessage = 'Error uploading CSV file. ';
       
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        errorMessage += 'Unable to connect to the server. Please check your internet connection or try again later.';
+        errorMessage += 'Unable to connect to the webhook server. Please check your webhook URL configuration in Settings and your internet connection.';
       } else if (error instanceof Error) {
         errorMessage += error.message;
       } else {
@@ -89,7 +106,7 @@ const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
         setStatusMessage('');
       }, 8000);
     }
-  }, [onUpload]);
+  }, [onUpload, config.csvUploadWebhookUrl]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -166,13 +183,18 @@ const CsvDropZone = ({ onUpload, isLoading }: CsvDropZoneProps) => {
               <p className="text-sm text-gray-600">
                 or click to browse files
               </p>
+              {!config.csvUploadWebhookUrl && (
+                <p className="text-sm text-red-600 mt-2">
+                  ⚠️ Webhook URL not configured. Please configure it in Settings.
+                </p>
+              )}
             </div>
           )}
           
           <Button 
             type="button" 
             variant="outline" 
-            disabled={uploadStatus === 'uploading'}
+            disabled={uploadStatus === 'uploading' || !config.csvUploadWebhookUrl}
             className="mt-4"
           >
             {uploadStatus === 'uploading' ? 'Processing...' : 'Choose File'}

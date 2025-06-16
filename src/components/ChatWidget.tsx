@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWebhookConfig } from '@/hooks/useWebhookConfig';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +14,7 @@ const ChatWidget = () => {
   const [hasGreeted, setHasGreeted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { config } = useWebhookConfig();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,12 +39,25 @@ const ChatWidget = () => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    // Check if webhook URL is configured
+    if (!config.chatWebhookUrl) {
+      const errorMessage = { 
+        id: Date.now().toString(), 
+        text: "Chat webhook URL not configured. Please configure it in Settings.", 
+        isBot: true 
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      return;
+    }
+
     const userMessage = { id: Date.now().toString(), text: input, isBot: false };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/2e9f09bc-7d53-4387-9d61-0fcb16a4d131', {
+      console.log('Sending chat message to:', config.chatWebhookUrl);
+      
+      const response = await fetch(config.chatWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +68,10 @@ const ChatWidget = () => {
         }),
       });
 
+      console.log('Chat response status:', response.status);
+      
       const result = await response.json();
+      console.log('Chat response data:', result);
       
       if (response.ok && result.message) {
         const botMessage = { id: (Date.now() + 1).toString(), text: result.message, isBot: true };
@@ -71,9 +89,20 @@ const ChatWidget = () => {
       }
     } catch (error) {
       console.error('Chat error:', error);
+      
+      let errorText = "Sorry, I encountered an error. ";
+      
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        errorText += "Unable to connect to the chat webhook. Please check your webhook URL configuration in Settings.";
+      } else if (error instanceof Error) {
+        errorText += error.message;
+      } else {
+        errorText += "Please try again.";
+      }
+      
       const errorMessage = { 
         id: (Date.now() + 1).toString(), 
-        text: "Sorry, I encountered an error. Please try again.", 
+        text: errorText, 
         isBot: true 
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -174,7 +203,7 @@ const ChatWidget = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter your contacts here... Examples: John Doe, +1234567890, Acme Corp or ask me questions about formatting!"
+              placeholder={config.chatWebhookUrl ? "Enter your contacts here... Examples: John Doe, +1234567890, Acme Corp or ask me questions about formatting!" : "Please configure chat webhook URL in Settings first"}
               className="w-full resize-vertical border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 rounded-lg p-3 text-sm transition-all duration-200"
               style={{ 
                 minHeight: '80px',
@@ -182,21 +211,21 @@ const ChatWidget = () => {
                 lineHeight: '1.5'
               }}
               rows={3}
-              disabled={isLoading}
+              disabled={isLoading || !config.chatWebhookUrl}
             />
             <Button
               onClick={handleSend}
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || !config.chatWebhookUrl}
               className="w-full mt-3 py-3 text-white font-semibold rounded-lg transition-transform hover:scale-[1.02] disabled:hover:scale-100"
               style={{
-                background: isLoading || !input.trim() 
+                background: isLoading || !input.trim() || !config.chatWebhookUrl
                   ? '#94a3b8' 
                   : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 border: 'none'
               }}
             >
               <Send size={16} className="mr-2" />
-              {isLoading ? 'Sending...' : 'Send Message'}
+              {isLoading ? 'Sending...' : !config.chatWebhookUrl ? 'Configure Webhook' : 'Send Message'}
             </Button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import CsvDropZone from '@/components/CsvDropZone';
 import InlineChat from '@/components/InlineChat';
+import { useWebhookConfig } from '@/hooks/useWebhookConfig';
 
 const Upload = () => {
   const { toast } = useToast();
@@ -12,6 +13,7 @@ const Upload = () => {
   const [chatMode, setChatMode] = useState(() => {
     return localStorage.getItem('chatMode') || 'inline';
   });
+  const { config } = useWebhookConfig();
 
   const handleCsvUpload = (message: string) => {
     console.log('CSV upload callback received:', message);
@@ -40,12 +42,23 @@ const Upload = () => {
   };
 
   const handleInlineChatSubmit = async (data: any[]) => {
+    // Check if webhook URL is configured
+    if (!config.chatWebhookUrl) {
+      toast({
+        title: "Configuration Required",
+        description: "Please configure the chat webhook URL in Settings before using inline chat.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
     
     try {
       console.log('Submitting inline chat data:', data);
+      console.log('Using webhook URL:', config.chatWebhookUrl);
       
-      const response = await fetch('https://pranaut.app.n8n.cloud/webhook/999f6676-738f-478a-95ec-246b01d71e24', {
+      const response = await fetch(config.chatWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,9 +84,18 @@ const Upload = () => {
       }
     } catch (error) {
       console.error('Inline chat submission error:', error);
+      
+      let errorMessage = "Something went wrong";
+      
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        errorMessage = "Unable to connect to the chat webhook. Please check your webhook URL configuration in Settings.";
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -129,7 +151,22 @@ const Upload = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <InlineChat onSubmit={handleInlineChatSubmit} isLoading={isUploading} />
+              {config.chatWebhookUrl ? (
+                <InlineChat onSubmit={handleInlineChatSubmit} isLoading={isUploading} />
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">⚙️</div>
+                  <p className="text-gray-600 mb-4">
+                    Chat webhook URL not configured.
+                  </p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = '/settings'}
+                  >
+                    Configure in Settings
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -150,18 +187,30 @@ const Upload = () => {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">💭</div>
                 <p className="text-gray-600">
-                  Click the chat widget to start a conversation and upload contacts.
+                  {config.chatWebhookUrl 
+                    ? "Click the chat widget to start a conversation and upload contacts."
+                    : "Please configure the chat webhook URL in Settings first."
+                  }
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setChatMode('inline');
-                    localStorage.setItem('chatMode', 'inline');
-                  }}
-                >
-                  Switch to Inline Chat
-                </Button>
+                <div className="space-y-2 mt-4">
+                  {!config.chatWebhookUrl && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.href = '/settings'}
+                    >
+                      Configure Webhook
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setChatMode('inline');
+                      localStorage.setItem('chatMode', 'inline');
+                    }}
+                  >
+                    Switch to Inline Chat
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

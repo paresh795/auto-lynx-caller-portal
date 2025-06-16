@@ -2,23 +2,46 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { useWebhookConfig } from '@/hooks/useWebhookConfig';
 
 const Settings = () => {
   const [chatMode, setChatMode] = useState('inline');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [webhookUrls, setWebhookUrls] = useState({
+    chatWebhookUrl: '',
+    csvUploadWebhookUrl: ''
+  });
+  const [webhookUnsavedChanges, setWebhookUnsavedChanges] = useState(false);
+  
   const { toast } = useToast();
+  const { config, isLoaded, saveConfig, resetConfig } = useWebhookConfig();
 
   useEffect(() => {
     const savedChatMode = localStorage.getItem('chatMode') || 'inline';
     setChatMode(savedChatMode);
   }, []);
 
+  useEffect(() => {
+    if (isLoaded) {
+      setWebhookUrls(config);
+    }
+  }, [config, isLoaded]);
+
   const handleChatModeChange = (value: string) => {
     setChatMode(value);
     setHasUnsavedChanges(true);
+  };
+
+  const handleWebhookUrlChange = (field: string, value: string) => {
+    setWebhookUrls(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setWebhookUnsavedChanges(true);
   };
 
   const saveSettings = () => {
@@ -32,6 +55,24 @@ const Settings = () => {
       title: "Settings Saved",
       description: "Your chat preferences have been updated successfully.",
     });
+  };
+
+  const saveWebhookSettings = () => {
+    const success = saveConfig(webhookUrls);
+    
+    if (success) {
+      setWebhookUnsavedChanges(false);
+      toast({
+        title: "Webhook URLs Saved",
+        description: "Your webhook configuration has been updated successfully.",
+      });
+    } else {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save webhook configuration. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetSettings = () => {
@@ -48,14 +89,113 @@ const Settings = () => {
     });
   };
 
+  const resetWebhookSettings = () => {
+    const success = resetConfig();
+    
+    if (success) {
+      setWebhookUrls({ chatWebhookUrl: '', csvUploadWebhookUrl: '' });
+      setWebhookUnsavedChanges(false);
+      toast({
+        title: "Webhook URLs Reset",
+        description: "Webhook configuration has been reset.",
+      });
+    } else {
+      toast({
+        title: "Reset Failed",
+        description: "Failed to reset webhook configuration. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="mt-2 text-gray-600">
-          Configure your AutoLynx preferences and chat options.
+          Configure your AutoLynx preferences, webhook URLs, and chat options.
         </p>
       </div>
+
+      {/* Webhook Configuration */}
+      <Card className="rounded-xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>🔗</span>
+            <span>Webhook Configuration</span>
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Configure the webhook URLs for chat and CSV upload functionality. These URLs will be used by the application.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="chatWebhookUrl" className="text-sm font-medium text-gray-900">
+                Chat Webhook URL
+              </Label>
+              <Input
+                id="chatWebhookUrl"
+                type="url"
+                value={webhookUrls.chatWebhookUrl}
+                onChange={(e) => handleWebhookUrlChange('chatWebhookUrl', e.target.value)}
+                placeholder="https://your-webhook-domain.com/webhook/your-chat-webhook-id"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Used for processing chat-based contact submissions
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="csvUploadWebhookUrl" className="text-sm font-medium text-gray-900">
+                CSV Upload Webhook URL
+              </Label>
+              <Input
+                id="csvUploadWebhookUrl"
+                type="url"
+                value={webhookUrls.csvUploadWebhookUrl}
+                onChange={(e) => handleWebhookUrlChange('csvUploadWebhookUrl', e.target.value)}
+                placeholder="https://your-webhook-domain.com/webhook/your-csv-webhook-id"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Used for processing CSV file uploads
+              </p>
+            </div>
+          </div>
+
+          {webhookUnsavedChanges && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-amber-600">⚠️</span>
+                <span className="text-sm font-medium text-amber-800">Unsaved Webhook Changes</span>
+              </div>
+              <p className="text-sm text-amber-700 mt-1">
+                You have unsaved webhook configuration changes. Click "Save Webhook URLs" to apply them.
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={resetWebhookSettings}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Reset Webhook URLs
+            </Button>
+            
+            <Button 
+              onClick={saveWebhookSettings}
+              disabled={!webhookUnsavedChanges}
+              className="bg-brand-primary hover:bg-brand-secondary"
+            >
+              Save Webhook URLs
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Chat Settings */}
       <Card className="rounded-xl shadow-sm">
@@ -128,18 +268,18 @@ const Settings = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-900 mb-3">API Endpoints</h4>
+              <h4 className="font-medium text-gray-900 mb-3">Current Webhook URLs</h4>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="font-medium">Chat Trigger:</span>
+                  <span className="font-medium">Chat Webhook:</span>
                   <div className="text-xs font-mono text-gray-600 break-all">
-                    https://pranaut.app.n8n.cloud/webhook/6e26988b-5633-4b04-995a-35902aa8ca1e/chat
+                    {webhookUrls.chatWebhookUrl || 'Not configured'}
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">CSV Upload:</span>
+                  <span className="font-medium">CSV Upload Webhook:</span>
                   <div className="text-xs font-mono text-gray-600 break-all">
-                    https://pranaut.app.n8n.cloud/webhook/999f6676-738f-478a-95ec-246b01d71e24
+                    {webhookUrls.csvUploadWebhookUrl || 'Not configured'}
                   </div>
                 </div>
               </div>
@@ -173,7 +313,7 @@ const Settings = () => {
           onClick={resetSettings}
           className="text-red-600 border-red-200 hover:bg-red-50"
         >
-          Reset to Defaults
+          Reset Chat Settings
         </Button>
         
         <div className="space-x-4">
@@ -192,7 +332,7 @@ const Settings = () => {
             disabled={!hasUnsavedChanges}
             className="bg-brand-primary hover:bg-brand-secondary"
           >
-            Save Settings
+            Save Chat Settings
           </Button>
         </div>
       </div>
