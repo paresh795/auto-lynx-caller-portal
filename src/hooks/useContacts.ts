@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,6 +11,10 @@ interface Contact {
   last_called_at: string;
   processing_order: number;
   campaign_id: string;
+  recording_url?: string;
+  cost?: number;
+  ended_reason?: string;
+  success_evaluation?: boolean;
 }
 
 export const useContacts = (campaignId?: string) => {

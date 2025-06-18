@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,7 +70,27 @@ const CampaignDetail = () => {
     const inProgress = contacts.filter(c => c.status === 'CALLING').length;
     const successRate = total > 0 ? Math.round((completed / (completed + failed || 1)) * 100) : 0;
 
-    return { total, completed, failed, inProgress, successRate };
+    // Calculate cost metrics
+    const totalCost = contacts.reduce((sum, c) => sum + (c.cost || 0), 0);
+    const averageCostPerCall = total > 0 ? totalCost / total : 0;
+
+    // Calculate AI success metrics
+    const contactsWithAIEval = contacts.filter(c => c.success_evaluation !== null);
+    const aiSuccessful = contacts.filter(c => c.success_evaluation === true).length;
+    const aiSuccessRate = contactsWithAIEval.length > 0 ? 
+      Math.round((aiSuccessful / contactsWithAIEval.length) * 100) : 0;
+
+    return { 
+      total, 
+      completed, 
+      failed, 
+      inProgress, 
+      successRate, 
+      totalCost,
+      averageCostPerCall,
+      aiSuccessRate,
+      aiEvaluated: contactsWithAIEval.length
+    };
   };
 
   if (error) {
@@ -138,7 +157,7 @@ const CampaignDetail = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
                 <div className="text-sm text-gray-600">Total Contacts</div>
@@ -155,9 +174,25 @@ const CampaignDetail = () => {
                 <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
                 <div className="text-sm text-gray-600">Failed</div>
               </div>
+            </div>
+
+            {/* Enhanced Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-brand-primary/10 rounded-lg">
                 <div className="text-2xl font-bold text-brand-primary">{stats.successRate}%</div>
                 <div className="text-sm text-gray-600">Success Rate</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{stats.aiSuccessRate}%</div>
+                <div className="text-sm text-gray-600">AI Success Rate</div>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">${stats.totalCost.toFixed(2)}</div>
+                <div className="text-sm text-gray-600">Total Cost</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">${stats.averageCostPerCall.toFixed(2)}</div>
+                <div className="text-sm text-gray-600">Avg Cost/Call</div>
               </div>
             </div>
           </div>
@@ -184,6 +219,9 @@ const CampaignDetail = () => {
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Company</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Phone</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Cost</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">End Reason</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">AI Success</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Last Called</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
                   </tr>
@@ -205,6 +243,20 @@ const CampaignDetail = () => {
                       </td>
                       <td className="py-3 px-4">
                         {getStatusBadge(contact.status)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {contact.cost ? `$${contact.cost.toFixed(2)}` : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {contact.ended_reason || '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        {contact.success_evaluation !== null ? 
+                          (contact.success_evaluation ? 
+                            <Badge className="bg-green-100 text-green-800">Success</Badge> : 
+                            <Badge className="bg-red-100 text-red-800">Failed</Badge>
+                          ) : '-'
+                        }
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {contact.last_called_at ? new Date(contact.last_called_at).toLocaleString() : '-'}

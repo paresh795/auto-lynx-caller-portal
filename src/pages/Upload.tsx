@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import CsvDropZone from '@/components/CsvDropZone';
 import InlineChat from '@/components/InlineChat';
 import { useWebhookConfig } from '@/hooks/useWebhookConfig';
+import { generateUUID } from '@/lib/utils';
 
 const Upload = () => {
   const { toast } = useToast();
@@ -65,7 +65,7 @@ const Upload = () => {
         },
         body: JSON.stringify({
           chatInput: JSON.stringify(data),
-          sessionId: crypto.randomUUID()
+          sessionId: generateUUID()
         }),
       });
 
@@ -104,7 +104,7 @@ const Upload = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-16 pb-16">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Upload Contacts</h1>
         <p className="mt-2 text-gray-600">
@@ -112,10 +112,10 @@ const Upload = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* CSV Upload */}
-        <Card className="rounded-xl shadow-sm">
-          <CardHeader>
+        <Card className="rounded-xl shadow-sm h-[900px] overflow-hidden">
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center space-x-2">
               <span>📁</span>
               <span>CSV Upload</span>
@@ -124,15 +124,29 @@ const Upload = () => {
               Upload a CSV file with contact information. Maximum 50 contacts per campaign.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <CsvDropZone onUpload={handleCsvUpload} isLoading={isUploading} />
+          <CardContent className="flex flex-col h-[730px] p-6">
+            <div className="flex-1 mb-6">
+              <CsvDropZone onUpload={handleCsvUpload} isLoading={isUploading} />
+            </div>
             
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Required CSV format:</h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                <div><strong>name</strong> - Contact name (2-64 characters)</div>
-                <div><strong>phone</strong> - Phone number in E.164 format (+1234567890)</div>
-                <div><strong>business_name</strong> - Company name (optional)</div>
+            <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm mb-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                Required CSV format:
+              </h4>
+              <div className="text-sm space-y-2">
+                <div className="flex items-center">
+                  <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs mr-2">name</span>
+                  <span className="text-gray-700">Contact name (2-64 characters)</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-green-600 bg-green-50 px-2 py-1 rounded text-xs mr-2">phone</span>
+                  <span className="text-gray-700">Phone number in E.164 format (+1234567890)</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded text-xs mr-2">business_name</span>
+                  <span className="text-gray-700">Company name (optional)</span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -140,8 +154,8 @@ const Upload = () => {
 
         {/* Inline Chat */}
         {chatMode === 'inline' && (
-          <Card className="rounded-xl shadow-sm">
-            <CardHeader>
+          <Card className="rounded-xl shadow-sm h-[900px] overflow-hidden">
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <span>💬</span>
                 <span>Chat Input</span>
@@ -150,21 +164,23 @@ const Upload = () => {
                 Paste or type your contact list directly. One contact per line.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-[730px] p-6">
               {config.chatWebhookUrl ? (
-                <InlineChat onSubmit={handleInlineChatSubmit} isLoading={isUploading} />
+                <InlineChat onSubmit={handleInlineChatSubmit} />
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">⚙️</div>
-                  <p className="text-gray-600 mb-4">
-                    Chat webhook URL not configured.
-                  </p>
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.location.href = '/settings'}
-                  >
-                    Configure in Settings
-                  </Button>
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">⚙️</div>
+                    <p className="text-gray-600 mb-4">
+                      Chat webhook URL not configured.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.href = '/settings'}
+                    >
+                      Configure in Settings
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

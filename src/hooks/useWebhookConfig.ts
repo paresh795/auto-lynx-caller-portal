@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 interface WebhookConfig {
@@ -6,9 +5,10 @@ interface WebhookConfig {
   csvUploadWebhookUrl: string;
 }
 
+// Default to environment variables (no hardcoded fallbacks for security)
 const DEFAULT_CONFIG: WebhookConfig = {
-  chatWebhookUrl: '',
-  csvUploadWebhookUrl: ''
+  chatWebhookUrl: import.meta.env.VITE_CHAT_WEBHOOK_URL || '',
+  csvUploadWebhookUrl: import.meta.env.VITE_CSV_UPLOAD_WEBHOOK_URL || ''
 };
 
 export const useWebhookConfig = () => {
@@ -21,10 +21,19 @@ export const useWebhookConfig = () => {
         const savedConfig = localStorage.getItem('webhookConfig');
         if (savedConfig) {
           const parsedConfig = JSON.parse(savedConfig);
-          setConfig(parsedConfig);
+          // Merge with defaults to ensure all fields are present
+          setConfig({
+            ...DEFAULT_CONFIG,
+            ...parsedConfig
+          });
+        } else {
+          // If no saved config, use defaults
+          setConfig(DEFAULT_CONFIG);
         }
       } catch (error) {
         console.error('Failed to load webhook config:', error);
+        // Fallback to defaults
+        setConfig(DEFAULT_CONFIG);
       } finally {
         setIsLoaded(true);
       }
@@ -71,6 +80,7 @@ export const useWebhookConfig = () => {
     config,
     isLoaded,
     saveConfig,
-    resetConfig
+    resetConfig,
+    isConfigured: Boolean(config.chatWebhookUrl && config.csvUploadWebhookUrl)
   };
 };

@@ -28,6 +28,8 @@ export type Database = {
         Row: {
           business_name: string | null
           campaign_id: string | null
+          cost: number | null
+          ended_reason: string | null
           last_called_at: string | null
           name: string | null
           phone: string | null
@@ -35,11 +37,14 @@ export type Database = {
           recording_url: string | null
           row_id: string
           status: Database["public"]["Enums"]["call_status"] | null
+          success_evaluation: boolean | null
           transcript: Json | null
         }
         Insert: {
           business_name?: string | null
           campaign_id?: string | null
+          cost?: number | null
+          ended_reason?: string | null
           last_called_at?: string | null
           name?: string | null
           phone?: string | null
@@ -47,11 +52,14 @@ export type Database = {
           recording_url?: string | null
           row_id: string
           status?: Database["public"]["Enums"]["call_status"] | null
+          success_evaluation?: boolean | null
           transcript?: Json | null
         }
         Update: {
           business_name?: string | null
           campaign_id?: string | null
+          cost?: number | null
+          ended_reason?: string | null
           last_called_at?: string | null
           name?: string | null
           phone?: string | null
@@ -59,6 +67,7 @@ export type Database = {
           recording_url?: string | null
           row_id?: string
           status?: Database["public"]["Enums"]["call_status"] | null
+          success_evaluation?: boolean | null
           transcript?: Json | null
         }
         Relationships: [
@@ -82,12 +91,17 @@ export type Database = {
     Views: {
       v_campaign_stats: {
         Row: {
+          ai_success_pct: number | null
+          ai_successful: number | null
+          avg_cost_per_call: number | null
+          campaign_created_at: string | null
           campaign_id: string | null
           completed: number | null
           failed: number | null
           last_activity: string | null
           success_pct: number | null
           total: number | null
+          total_cost: number | null
         }
         Relationships: []
       }

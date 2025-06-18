@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +62,7 @@ const Dashboard = () => {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="rounded-xl shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Campaigns</CardTitle>
@@ -96,6 +95,36 @@ const Dashboard = () => {
 
         <Card className="rounded-xl shadow-sm">
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">AI Success Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">{stats.aiSuccessRate}%</div>
+            <div className="text-sm text-gray-600 mt-1">AI evaluated</div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Cost</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-600">${stats.totalCost.toFixed(2)}</div>
+            <div className="text-sm text-gray-600 mt-1">All campaigns</div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Avg Cost/Call</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-600">${stats.averageCostPerCall.toFixed(2)}</div>
+            <div className="text-sm text-gray-600 mt-1">Per call</div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl shadow-sm">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Today's Calls</CardTitle>
           </CardHeader>
           <CardContent>
@@ -115,7 +144,10 @@ const Dashboard = () => {
             <div className="text-sm text-gray-600 mt-1">Currently running</div>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Secondary KPI Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="rounded-xl shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Avg Call Duration</CardTitle>

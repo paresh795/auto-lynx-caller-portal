@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -6,13 +5,17 @@ interface DashboardStats {
   totalCampaigns: number;
   totalCalls: number;
   successRate: number;
+  aiSuccessRate: number;
   averageDuration: number;
   todaysCalls: number;
   activeCampaigns: number;
+  totalCost: number;
+  averageCostPerCall: number;
   trendData: Array<{
     date: string;
     calls: number;
     success: number;
+    cost: number;
   }>;
 }
 
@@ -21,9 +24,12 @@ export const useDashboardStats = () => {
     totalCampaigns: 0,
     totalCalls: 0,
     successRate: 0,
+    aiSuccessRate: 0,
     averageDuration: 0,
     todaysCalls: 0,
     activeCampaigns: 0,
+    totalCost: 0,
+    averageCostPerCall: 0,
     trendData: []
   });
   const [loading, setLoading] = useState(true);
@@ -78,6 +84,18 @@ export const useDashboardStats = () => {
       
       const successRate = totalCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
       
+      // Calculate AI success rate from success_evaluation field
+      const contactsWithAIEval = contacts?.filter(c => c.success_evaluation !== null) || [];
+      const aiSuccessfulCalls = contacts?.filter(c => c.success_evaluation === true).length || 0;
+      const aiSuccessRate = contactsWithAIEval.length > 0 ? 
+        Math.round((aiSuccessfulCalls / contactsWithAIEval.length) * 100) : 0;
+
+      // Calculate cost metrics
+      const contactsWithCost = contacts?.filter(c => c.cost && c.cost > 0) || [];
+      const totalCost = contactsWithCost.reduce((sum, c) => sum + (c.cost || 0), 0);
+      const averageCostPerCall = contactsWithCost.length > 0 ? 
+        Math.round((totalCost / contactsWithCost.length) * 100) / 100 : 0;
+      
       // Today's calls (contacts that have been called today)
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -117,12 +135,15 @@ export const useDashboardStats = () => {
       const contactsWithDuration = contacts?.filter(c => 
         c.transcript && 
         typeof c.transcript === 'object' && 
-        c.transcript.duration
+        !Array.isArray(c.transcript) &&
+        'duration' in c.transcript &&
+        typeof c.transcript.duration === 'number'
       ) || [];
       
       if (contactsWithDuration.length > 0) {
         const totalDuration = contactsWithDuration.reduce((sum, c) => {
-          return sum + (c.transcript.duration || 0);
+          const transcript = c.transcript as { duration: number };
+          return sum + (transcript.duration || 0);
         }, 0);
         averageDuration = Math.round(totalDuration / contactsWithDuration.length);
       }
@@ -132,6 +153,14 @@ export const useDashboardStats = () => {
         averageDuration
       });
 
+      console.log('Cost and AI metrics:', {
+        totalCost,
+        averageCostPerCall,
+        aiSuccessRate,
+        contactsWithCost: contactsWithCost.length,
+        contactsWithAIEval: contactsWithAIEval.length
+      });
+
       // Generate trend data from actual call data
       const trendData = generateTrendData(contacts || []);
 
@@ -139,9 +168,12 @@ export const useDashboardStats = () => {
         totalCampaigns,
         totalCalls,
         successRate,
+        aiSuccessRate,
         averageDuration,
         todaysCalls,
         activeCampaigns,
+        totalCost,
+        averageCostPerCall,
         trendData
       };
 
@@ -178,11 +210,13 @@ export const useDashboardStats = () => {
       
       const totalCalls = dayContacts.length;
       const successfulCalls = dayContacts.filter(c => c.status === 'DONE').length;
+      const dayCost = dayContacts.reduce((sum, c) => sum + (c.cost || 0), 0);
       
       return {
         date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }),
         calls: totalCalls,
-        success: successfulCalls
+        success: successfulCalls,
+        cost: Math.round(dayCost * 100) / 100 // Round to 2 decimal places
       };
     });
   };

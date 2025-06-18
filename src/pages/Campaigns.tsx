@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,8 +21,103 @@ const Campaigns = () => {
     }
   };
 
+  const formatCampaignName = (campaignId: string) => {
+    // Extract date and time from campaign ID for display
+    const patterns = [
+      { regex: /ALX-(\d{8})-(\d{6})/, type: 'datetime' },  // ALX-20240613-181950
+      { regex: /ALX-(\d{8})-([A-F0-9]{6})/, type: 'date' },  // ALX-20240613-B2A7F0
+      { regex: /ALX-(\d{2})-(\d{6})/, type: 'legacy' },  // ALX-13-181950
+    ];
+    
+    for (const pattern of patterns) {
+      const match = campaignId.match(pattern.regex);
+      if (match) {
+        const [, datePart, timePart] = match;
+        
+        if (pattern.type === 'datetime' && datePart.length === 8) {
+          // Format: ALX-20240613-181950 -> ALX - Jun 13, 2024 at 6:19 PM
+          const year = parseInt(datePart.substring(0, 4));
+          const month = parseInt(datePart.substring(4, 6)) - 1;
+          const day = parseInt(datePart.substring(6, 8));
+          const hour = parseInt(timePart.substring(0, 2));
+          const minute = parseInt(timePart.substring(2, 4));
+          
+          const date = new Date(year, month, day, hour, minute);
+          const formattedDate = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+          const formattedTime = date.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            hour12: true 
+          });
+          
+          return `ALX - ${formattedDate} at ${formattedTime}`;
+        } else if (pattern.type === 'date' && datePart.length === 8) {
+          // Format: ALX-20240613-B2A7F0 -> ALX - Jun 13, 2024
+          const year = parseInt(datePart.substring(0, 4));
+          const month = parseInt(datePart.substring(4, 6)) - 1;
+          const day = parseInt(datePart.substring(6, 8));
+          
+          const date = new Date(year, month, day);
+          const formattedDate = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+          
+          return `ALX - ${formattedDate}`;
+        } else if (pattern.type === 'legacy') {
+          // Format: ALX-13-181950 -> ALX - Day 13 at 6:19 PM
+          const day = parseInt(datePart);
+          const hour = parseInt(timePart.substring(0, 2));
+          const minute = parseInt(timePart.substring(2, 4));
+          
+          const time = new Date();
+          time.setHours(hour, minute);
+          const formattedTime = time.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            hour12: true 
+          });
+          
+          return `ALX - Day ${day} at ${formattedTime}`;
+        }
+      }
+    }
+    
+    // Fallback to original campaign ID
+    return campaignId;
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'No activity yet';
+      }
+      
+      // Check if date is the Unix epoch (1969/1970) which indicates NULL
+      if (date.getFullYear() < 1990) {
+        return 'No activity yet';
+      }
+      
+      // Format consistently: MM/DD/YYYY, HH:MM AM/PM
+      return date.toLocaleString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   if (error) {
@@ -105,7 +199,7 @@ const Campaigns = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg font-semibold">
-                        {campaign.campaign_id}
+                        {formatCampaignName(campaign.campaign_id)}
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-1">
                         Last activity: {formatDate(campaign.last_activity)}
