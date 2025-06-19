@@ -19,6 +19,10 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Documentation files (private)
+PRD.md
+n8n-PROJECT-DOCUMENTATION-FINAL.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
