@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLynx Webhook Tester - Professional Testing Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 25px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .test-section {
+            margin-bottom: 50px;
+            border: 2px solid #e8ecf0;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .test-section:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .test-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-bottom: 2px solid #e8ecf0;
+            position: relative;
+        }
+
+        .test-header h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .test-header p {
+            color: #718096;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .test-body {
+            padding: 40px;
+            background: #fafbfc;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, 
+        .form-group textarea, 
+        .form-group select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, 
+        .form-group textarea:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            height: 140px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 13px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-small:hover {
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .btn-clear:hover {
+            box-shadow: 0 10px 25px rgba(113, 128, 150, 0.4);
+        }
+
+        .response-area {
+            margin-top: 35px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 15px;
+            border-left: 6px solid #667eea;
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .response-area h4 {
+            margin-bottom: 20px;
+            color: #2d3748;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .response-content {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+            border: 1px solid #2d3748;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .response-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .response-content::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+
+        .response-content::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+
+        .status-success { 
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%); 
+            color: #22543d; 
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status-error { 
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%); 
+            color: #742a2a; 
+            border: 1px solid #feb2b2;
+        }
+        
+        .status-loading { 
+            background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%); 
+            color: #744210; 
+            border: 1px solid #faf089;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .quick-buttons {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .quick-buttons h4 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .logs-section {
+            background: #1a202c;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #2d3748;
+        }
+
+        .logs-header {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            padding: 20px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logs-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .logs {
+            background: #1a202c;
+            color: #00ff41;
+            padding: 25px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 13px;
+            height: 300px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .logs::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        .logs::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .grid { 
+                grid-template-columns: 1fr; 
+                gap: 20px;
+            }
+            
+            body { 
+                padding: 15px; 
+            }
+            
+            .content {
+                padding: 30px 25px;
+            }
+            
+            .header {
+                padding: 35px 25px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .test-body {
+                padding: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AutoLynx Webhook Tester</h1>
+            <p>Professional Testing Interface for n8n Workflows</p>
+        </div>
+
+        <div class="content">
+            <!-- Chat Testing Section -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>💬 Chat & Conversation Testing</h2>
+                    <p>Test AI chat responses, conversation flow, and message handling</p>
+                    <span class="feature-badge">Real-time Testing</span>
+                    <div class="quick-buttons">
+                        <h4>🎯 Quick Test Examples:</h4>
+                        <button class="btn btn-small" onclick="loadChatExample('help')">❓ Help Request</button>
+                        <button class="btn btn-small" onclick="loadChatExample('format')">📋 Format Question</button>
+                        <button class="btn btn-small" onclick="loadChatExample('campaign')">🎯 Campaign Query</button>
+                    </div>
+                </div>
+                <div class="test-body">
+                    <div class="grid">
+                        <div>
+                            <div class="form-group">
+                                <label>🔗 Webhook URL:</label>
+                                <input type="url" id="chatWebhookUrl" value="https://pranaut.app.n8n.cloud/webhook/master-caller-upload" placeholder="Enter your n8n webhook URL">
+                            </div>
+                            <div class="form-group">
+                                <label>💬 Message Content:</label>
+                                <textarea id="chatMessage" placeholder="Type your test message here...">How can I format my contact list properly for AutoLynx?</textarea>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>🆔 Session ID:</label>
+                                <input type="text" id="sessionId" value="test-session-123" placeholder="Unique session identifier">
+                            </div>
+                            <div class="form-group">
+                                <label>🎭 Conversation Type:</label>
+                                <select id="conversationType">
+                                    <option value="chat">💬 General Chat/Help</option>
+                                    <option value="formatting">📋 Format Question</option>
+                                    <option value="campaign">🎯 Campaign Creation</option>
+                                </select>
+                            </div>
+                            <div style="margin-top: 30px;">
+                                <button class="btn" onclick="testChat()">🚀 Send Chat Message</button>
+                                <button class="btn btn-clear" onclick="clearResponse('chat')">🗑️ Clear Response</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="response-area" id="chatResponse">
+                        <h4>📨 Chat Response:</h4>
+                        <div class="status" id="chatStatus"></div>
+                        <div class="response-content" id="chatContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Testing Section -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>📋 Campaign & Contact Upload Testing</h2>
+                    <p>Test contact list processing, campaign creation, and bulk operations</p>
+                    <span class="feature-badge">Bulk Processing</span>
+                    <div class="quick-buttons">
+                        <h4>📊 Sample Data Sets:</h4>
+                        <button class="btn btn-small" onclick="loadCampaignExample('small')">👥 3 Contacts</button>
+                        <button class="btn btn-small" onclick="loadCampaignExample('medium')">👥👥 10 Contacts</button>
+                        <button class="btn btn-small" onclick="loadCampaignExample('custom')">✏️ Custom Data</button>
+                    </div>
+                </div>
+                <div class="test-body">
+                    <div class="grid">
+                        <div>
+                            <div class="form-group">
+                                <label>🔗 Campaign Webhook URL:</label>
+                                <input type="url" id="campaignWebhookUrl" value="https://pranaut.app.n8n.cloud/webhook/master-caller-upload" placeholder="Enter your campaign webhook URL">
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Campaign Name:</label>
+                                <input type="text" id="campaignName" value="Test Campaign - Real Estate Leads" placeholder="Enter descriptive campaign name">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>⚙️ Request Type:</label>
+                                <select id="requestType">
+                                    <option value="campaign">🎯 Campaign Creation</option>
+                                    <option value="upload">📤 Contact Upload</option>
+                                    <option value="conversation">💬 Conversation</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>🎙️ Voice ID:</label>
+                                <input type="text" id="voiceId" value="sarah" placeholder="VAPI voice identifier">
+                            </div>
+                            <div style="margin-top: 30px;">
+                                <button class="btn" onclick="testCampaign()">🚀 Create Campaign</button>
+                                <button class="btn btn-clear" onclick="clearResponse('campaign')">🗑️ Clear Response</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>📊 Contact Data (CSV Format):</label>
+                        <textarea id="contactData" placeholder="Format: name,phone,email,company&#10;John Doe,+15551234567,john@example.com,ABC Corp">John Doe,+15551234567,john@example.com,ABC Corp
+Jane Smith,+15555678901,jane@example.com,XYZ Inc
+Bob Johnson,+15559012345,bob@example.com,DEF LLC</textarea>
+                    </div>
+                    <div class="response-area" id="campaignResponse">
+                        <h4>📈 Campaign Response:</h4>
+                        <div class="status" id="campaignStatus"></div>
+                        <div class="response-content" id="campaignContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testing Logs Section -->
+            <div class="test-section logs-section">
+                <div class="logs-header">
+                    <h2>📝 Real-time Testing Logs</h2>
+                    <button class="btn btn-clear" onclick="clearLogs()">🗑️ Clear Logs</button>
+                </div>
+                <div class="logs" id="testLogs">[SYSTEM] AutoLynx Webhook Tester initialized successfully
+[INFO] Professional testing interface ready
+[STATUS] Waiting for webhook tests...
+
+</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced logging with timestamps and colors
+        function log(message, type = 'INFO') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('testLogs');
+            const logMessage = `[${timestamp}] [${type}] ${message}\n`;
+            logElement.textContent += logMessage;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Quick examples for chat testing with enhanced data
+        function loadChatExample(type) {
+            const messageField = document.getElementById('chatMessage');
+            const typeField = document.getElementById('conversationType');
+            
+            switch(type) {
+                case 'help':
+                    messageField.value = "Hi! I'm new to AutoLynx. Can you help me understand how to get started with creating my first calling campaign?";
+                    typeField.value = "chat";
+                    break;
+                case 'format':
+                    messageField.value = "What's the exact format I need for uploading contact lists? I have a CSV with names, phone numbers, and company info.";
+                    typeField.value = "formatting";
+                    break;
+                case 'campaign':
+                    messageField.value = "I want to create a new calling campaign for real estate leads. I have about 25 contacts ready to upload.";
+                    typeField.value = "campaign";
+                    break;
+            }
+            log(`✅ Loaded ${type} example for chat testing`, 'SUCCESS');
+        }
+
+        // Enhanced campaign examples with realistic data
+        function loadCampaignExample(type) {
+            const dataField = document.getElementById('contactData');
+            const nameField = document.getElementById('campaignName');
+            
+            switch(type) {
+                case 'small':
+                    dataField.value = `John Doe,+15551234567,john@example.com,ABC Corp
+Jane Smith,+15555678901,jane@example.com,XYZ Inc
+Bob Johnson,+15559012345,bob@example.com,DEF LLC`;
+                    nameField.value = "Small Test Campaign - 3 Contacts";
+                    break;
+                case 'medium':
+                    dataField.value = `John Doe,+15551234567,john@example.com,ABC Corp
+Jane Smith,+15555678901,jane@example.com,XYZ Inc
+Bob Johnson,+15559012345,bob@example.com,DEF LLC
+Alice Brown,+15553456789,alice@example.com,GHI Co
+Charlie Wilson,+15557890123,charlie@example.com,JKL Corp
+Diana Prince,+15552468135,diana@example.com,MNO Inc
+Frank Miller,+15551357924,frank@example.com,PQR LLC
+Grace Kelly,+15558642097,grace@example.com,STU Corp
+Henry Ford,+15559753186,henry@example.com,VWX Inc
+Ivy Thompson,+15551470258,ivy@example.com,YZ Corp`;
+                    nameField.value = "Medium Test Campaign - 10 Contacts";
+                    break;
+                case 'custom':
+                    dataField.value = "name,phone,email,company\n";
+                    nameField.value = "Custom Campaign - Your Data";
+                    break;
+            }
+            log(`✅ Loaded ${type} dataset for campaign testing`, 'SUCCESS');
+        }
+
+        // Enhanced chat testing with better error handling
+        async function testChat() {
+            const webhookUrl = document.getElementById('chatWebhookUrl').value;
+            const message = document.getElementById('chatMessage').value;
+            const sessionId = document.getElementById('sessionId').value;
+            const conversationType = document.getElementById('conversationType').value;
+
+            if (!webhookUrl || !message) {
+                alert('⚠️ Please fill in both webhook URL and message');
+                log('❌ Missing required fields for chat test', 'ERROR');
+                return;
+            }
+
+            showResponse('chat', 'loading', '🔄 Sending chat message to n8n workflow...');
+            log(`🚀 Sending chat message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`, 'INFO');
+            log(`📡 Target URL: ${webhookUrl}`, 'INFO');
+
+            const payload = {
+                requestType: 'conversation',
+                conversationType: conversationType,
+                message: message,
+                sessionId: sessionId,
+                timestamp: new Date().toISOString(),
+                source: 'autolynx-webhook-tester',
+                version: '2.0'
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(responseData);
+                        showResponse('chat', 'success', JSON.stringify(jsonData, null, 2));
+                        log(`✅ Chat response received successfully (${responseTime}ms)`, 'SUCCESS');
+                        
+                        if (jsonData.response) {
+                            log(`🤖 AI Response: "${jsonData.response.substring(0, 100)}${jsonData.response.length > 100 ? '...' : ''}"`, 'INFO');
+                        }
+                    } catch (e) {
+                        showResponse('chat', 'success', responseData);
+                        log(`✅ Response received (non-JSON format, ${responseTime}ms)`, 'SUCCESS');
+                    }
+                } else {
+                    showResponse('chat', 'error', `HTTP ${response.status}: ${responseData}`);
+                    log(`❌ Chat request failed: HTTP ${response.status} (${responseTime}ms)`, 'ERROR');
+                }
+            } catch (error) {
+                showResponse('chat', 'error', `Network error: ${error.message}`);
+                log(`❌ Network error: ${error.message}`, 'ERROR');
+            }
+        }
+
+        // Enhanced campaign testing
+        async function testCampaign() {
+            const webhookUrl = document.getElementById('campaignWebhookUrl').value;
+            const campaignName = document.getElementById('campaignName').value;
+            const contactData = document.getElementById('contactData').value;
+            const requestType = document.getElementById('requestType').value;
+            const voiceId = document.getElementById('voiceId').value;
+
+            if (!webhookUrl || !campaignName || !contactData) {
+                alert('⚠️ Please fill in all required fields');
+                log('❌ Missing required fields for campaign test', 'ERROR');
+                return;
+            }
+
+            // Count contacts
+            const contactCount = contactData.trim().split('\n').filter(line => line.trim()).length;
+            
+            showResponse('campaign', 'loading', '🔄 Creating campaign and processing contacts...');
+            log(`🚀 Creating campaign: "${campaignName}" with ${contactCount} contacts`, 'INFO');
+            log(`📡 Target URL: ${webhookUrl}`, 'INFO');
+
+            const payload = {
+                requestType: requestType,
+                campaignName: campaignName,
+                contactData: contactData,
+                message: contactData,
+                voiceId: voiceId,
+                timestamp: new Date().toISOString(),
+                source: 'autolynx-webhook-tester',
+                version: '2.0',
+                contactCount: contactCount
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(responseData);
+                        showResponse('campaign', 'success', JSON.stringify(jsonData, null, 2));
+                        log(`✅ Campaign created successfully (${responseTime}ms)`, 'SUCCESS');
+                        
+                        if (jsonData.campaign_id) {
+                            log(`🎯 Campaign ID: ${jsonData.campaign_id}`, 'INFO');
+                        }
+                    } catch (e) {
+                        showResponse('campaign', 'success', responseData);
+                        log(`✅ Campaign response received (non-JSON format, ${responseTime}ms)`, 'SUCCESS');
+                    }
+                } else {
+                    showResponse('campaign', 'error', `HTTP ${response.status}: ${responseData}`);
+                    log(`❌ Campaign creation failed: HTTP ${response.status} (${responseTime}ms)`, 'ERROR');
+                }
+            } catch (error) {
+                showResponse('campaign', 'error', `Network error: ${error.message}`);
+                log(`❌ Network error: ${error.message}`, 'ERROR');
+            }
+        }
+
+        // Enhanced response display
+        function showResponse(type, status, content) {
+            const responseElement = document.getElementById(`${type}Response`);
+            const statusElement = document.getElementById(`${type}Status`);
+            const contentElement = document.getElementById(`${type}Content`);
+
+            responseElement.style.display = 'block';
+            statusElement.className = `status status-${status}`;
+            
+            const statusText = {
+                'loading': '🔄 Processing',
+                'success': '✅ Success', 
+                'error': '❌ Error'
+            };
+            
+            statusElement.textContent = statusText[status] || status;
+            contentElement.textContent = content;
+        }
+
+        // Clear response
+        function clearResponse(type) {
+            document.getElementById(`${type}Response`).style.display = 'none';
+            log(`🗑️ ${type} response cleared`, 'INFO');
+        }
+
+        // Enhanced log clearing
+        function clearLogs() {
+            document.getElementById('testLogs').textContent = '[SYSTEM] AutoLynx Webhook Tester initialized successfully\n[INFO] Professional testing interface ready\n[STATUS] Logs cleared - Ready for new tests...\n\n';
+        }
+
+        // Initialize with welcome messages
+        log('🎉 Welcome to AutoLynx Professional Webhook Tester!', 'SUCCESS');
+        log('🔧 Use the sections above to test your n8n workflows', 'INFO');
+        log('📊 All requests and responses will be logged here', 'INFO');
+        log('🚀 Ready for testing!', 'SUCCESS');
+    </script>
+</body>
+</html> 

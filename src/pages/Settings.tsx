@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { useWebhookConfig } from '@/hooks/useWebhookConfig';
+import { getBranding } from '@/lib/utils';
 
 const Settings = () => {
   const [chatMode, setChatMode] = useState('inline');
@@ -19,6 +19,7 @@ const Settings = () => {
   
   const { toast } = useToast();
   const { config, isLoaded, saveConfig, resetConfig } = useWebhookConfig();
+  const branding = getBranding();
 
   useEffect(() => {
     const savedChatMode = localStorage.getItem('chatMode') || 'inline';
@@ -113,7 +114,7 @@ const Settings = () => {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="mt-2 text-gray-600">
-          Configure your AutoLynx preferences, webhook URLs, and chat options.
+          Configure your {branding.companyName} preferences, webhook URLs, and chat options.
         </p>
       </div>
 
@@ -299,6 +300,53 @@ const Settings = () => {
                 </div>
                 <div>
                   <span className="font-medium">Status Types:</span> NEW, CALLING, DONE, FAILED
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Support & Contact Information */}
+      <Card className="rounded-xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>📧</span>
+            <span>Support & Contact</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Application Information</h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">App Name:</span> {branding.appName}
+                </div>
+                <div>
+                  <span className="font-medium">Company:</span> {branding.companyName}
+                </div>
+                <div>
+                  <span className="font-medium">Description:</span> {branding.appDescription}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Support Contact</h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">Support Email:</span> 
+                  <a 
+                    href={`mailto:${branding.supportEmail}`}
+                    className="text-brand-primary hover:text-brand-secondary ml-1 underline"
+                  >
+                    {branding.supportEmail}
+                  </a>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Need help? Contact our support team for assistance with campaigns, 
+                  technical issues, or general questions.
                 </div>
               </div>
             </div>

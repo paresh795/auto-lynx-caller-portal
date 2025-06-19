@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn, getBranding } from '@/lib/utils';
 import ChatWidget from './ChatWidget';
 
 interface LayoutProps {
@@ -11,6 +10,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const [chatMode, setChatMode] = useState('inline');
+  const branding = getBranding();
 
   useEffect(() => {
     const savedChatMode = localStorage.getItem('chatMode') || 'inline';
@@ -42,6 +42,16 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 
+  // Generate initials from company name for logo
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header */}
@@ -51,9 +61,9 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">AL</span>
+                  <span className="text-white font-bold text-sm">{getInitials(branding.companyName)}</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">AutoLynx</span>
+                <span className="text-xl font-bold text-gray-900">{branding.companyName}</span>
               </Link>
             </div>
             

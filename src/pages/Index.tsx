@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { getBranding } from '@/lib/utils';
 
 const Index = () => {
   const { stats, loading } = useDashboardStats();
+  const branding = getBranding();
 
   return (
     <div className="space-y-12">
@@ -14,11 +15,10 @@ const Index = () => {
       <div className="text-center space-y-6">
         <div className="space-y-4">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
-            Welcome to <span className="text-brand-primary">AutoLynx</span>
+            Welcome to <span className="text-brand-primary">{branding.companyName}</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Streamline your outbound calling campaigns with intelligent automation. 
-            Upload contacts, monitor progress in real-time, and track performance with ease.
+            {branding.appDescription}. Upload contacts, monitor progress in real-time, and track performance with ease.
           </p>
         </div>
         
@@ -84,7 +84,7 @@ const Index = () => {
       <div className="space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
-          <p className="text-gray-600 mt-2">Get started with AutoLynx in three simple steps</p>
+          <p className="text-gray-600 mt-2">Get started with {branding.companyName} in three simple steps</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -151,12 +151,9 @@ const Index = () => {
               </div>
               <div>
                 <div className="text-3xl font-bold">
-                  {stats.averageDuration > 0 
-                    ? `${Math.floor(stats.averageDuration / 60)}m ${stats.averageDuration % 60}s`
-                    : 'N/A'
-                  }
+                  ${stats.totalCost.toFixed(2)}
                 </div>
-                <div className="text-sm opacity-90">Avg Call Duration</div>
+                <div className="text-sm opacity-90">Total Spend</div>
               </div>
             </div>
           )}

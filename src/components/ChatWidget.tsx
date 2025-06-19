@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { X, MessageCircle, Send, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWebhookConfig } from '@/hooks/useWebhookConfig';
-import { generateUUID } from '@/lib/utils';
+import { generateUUID, getBranding } from '@/lib/utils';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,6 +28,7 @@ const ChatWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { config } = useWebhookConfig();
+  const branding = getBranding();
 
   const resetSession = () => {
     const newSession = generateUUID();
@@ -52,15 +53,15 @@ const ChatWidget = () => {
 
   // Show greeting when first opened
   useEffect(() => {
-    if (isOpen && !hasGreeted) {
+    if (isOpen && !hasGreeted && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm your AutoLynx AI Assistant. I can help you with:\n\n• Formatting contact lists\n• Creating calling campaigns\n• Answering questions about the system\n• Processing CSV files\n\nWhat would you like to do today?",
+        text: `Hi! I'm your ${branding.companyName} AI Assistant. I can help you with:\n\n• Formatting contact lists\n• Creating calling campaigns\n• Answering questions about the system\n• Processing CSV files\n\nWhat would you like to do today?`,
         isBot: true
       }]);
       setHasGreeted(true);
     }
-  }, [isOpen, hasGreeted]);
+  }, [isOpen, hasGreeted, messages.length, branding.companyName]);
 
   const sendMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
@@ -251,7 +252,7 @@ const ChatWidget = () => {
             }}
           >
             <div className="flex flex-col">
-              <span>AutoLynx AI Assistant</span>
+              <span>{branding.companyName} AI Assistant</span>
               <span className="text-xs text-white/80">
                 {isLoading ? 'Thinking...' : 'Online'}
               </span>
@@ -318,7 +319,7 @@ const ChatWidget = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about AutoLynx, contact formatting, or campaign creation..."
+                placeholder={`Ask me anything about ${branding.companyName}, contact formatting, or campaign creation...`}
                 className="flex-1 min-h-[40px] max-h-[100px] resize-none border-gray-200 focus:border-purple-400"
                 disabled={isLoading}
                 rows={1}
